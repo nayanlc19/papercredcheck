@@ -171,7 +171,7 @@ export async function scoreJournal(
     .select('*');
   
   if (predatoryJournals && predatoryJournals.length > 0) {
-    const candidates = preFilterCandidates(journalName, predatoryJournals.map(j => ({ name: j.title, ...j })), 3);
+    const candidates = preFilterCandidates(journalName, predatoryJournals.map((j: any) => ({ name: j.title, ...j })), 3);
     console.log(`   Pre-filtered ${predatoryJournals.length} predatory journals to ${candidates.length} candidates`);
     
     for (const { item: journal } of candidates) {
@@ -209,7 +209,7 @@ export async function scoreJournal(
     .select('*');
   
   if (hijackedJournals && hijackedJournals.length > 0) {
-    const candidates = preFilterCandidates(journalName, hijackedJournals.map(j => ({ name: j.legitimateTitle, ...j })), 3);
+    const candidates = preFilterCandidates(journalName, hijackedJournals.map((j: any) => ({ name: j.legitimateTitle, ...j })), 3);
     console.log(`   Pre-filtered ${hijackedJournals.length} hijacked journals to ${candidates.length} candidates`);
     
     for (const { item: journal } of candidates) {
