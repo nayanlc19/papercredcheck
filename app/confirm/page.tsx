@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 interface SearchResult {
@@ -13,7 +13,7 @@ interface SearchResult {
   citationCount: number;
 }
 
-export default function ConfirmPage() {
+function ConfirmPageContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [results, setResults] = useState<SearchResult[]>([]);
@@ -211,5 +211,22 @@ export default function ConfirmPage() {
         )}
       </div>
     </main>
+  );
+}
+
+export default function ConfirmPage() {
+  return (
+    <Suspense fallback={
+      <main className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+        <div className="container mx-auto px-4 py-16">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+            <p className="mt-4 text-gray-600">Loading...</p>
+          </div>
+        </div>
+      </main>
+    }>
+      <ConfirmPageContent />
+    </Suspense>
   );
 }
