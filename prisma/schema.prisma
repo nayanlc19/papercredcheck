@@ -1,0 +1,154 @@
+// This is your Prisma schema file - SINGLE SOURCE OF TRUTH
+// Learn more: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Analysis session - one per DOI input
+model Analysis {
+  id              String      @id @default(cuid())
+  inputDoi        String
+  totalReferences Int         @default(0)
+  highRiskCount   Int         @default(0)
+  retractedCount  Int         @default(0)
+  createdAt       DateTime    @default(now())
+  
+  references      Reference[]
+  
+  @@index([inputDoi])
+  @@index([createdAt])
+}
+
+// Individual cited reference with scoring
+model Reference {
+  id             String    @id @default(cuid())
+  analysisId     String
+  analysis       Analysis  @relation(fields: [analysisId], references: [id], onDelete: Cascade)
+  
+  // Citation metadata
+  doi            String?
+  title          String
+  journal        String
+  issn           String?
+  year           Int?
+  authors        String?
+  
+  // PRIMARY: Predatory scoring (0-100)
+  predatoryScore Int       @default(0) // 0 = minimal risk, 100 = very high risk
+  scoreBreakdown Json?     // {bealls: 30, stopPredatory: 30, hijacked: 25, scopus: 15}
+  evidenceSources String[]  // ["bealls", "stop-predatory-journals"]
+  matchConfidence Int?      // Fuzzy match score 0-100
+  
+  // SECONDARY: Retraction alerts
+  isRetracted    Boolean   @default(false)
+  retractionSource String[] // ["crossref", "pubmed", "pubpeer"]
+  retractionDate DateTime?
+  retractionReason String?
+  
+  createdAt      DateTime  @default(now())
+  
+  @@index([analysisId])
+  @@index([predatoryScore])
+  @@index([isRetracted])
+  @@index([journal])
+}
+
+// Cache for predatory journal lists (optional - for tracking updates)
+model DataSourceCache {
+  id          String   @id @default(cuid())
+  sourceName  String   @unique // "bealls", "stop-predatory", "scopus"
+  lastUpdated DateTime @default(now())
+  recordCount Int      @default(0)
+  metadata    Json?    // Store source-specific info
+}
+
+// ========================================
+// PREDATORY DATA TABLES (from various sources)
+// ========================================
+
+// Predatory Publishers (from Beall's + Stop Predatory Journals)
+model PredatoryPublisher {
+  id            String   @id @default(cuid())
+  name          String
+  website       String?
+  source        String   // "bealls", "stop-predatory-journals"
+  country       String?
+  notes         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  @@index([name])
+  @@index([source])
+  @@unique([name, source])
+}
+
+// Predatory Journals (from Beall's + Stop Predatory Journals)
+model PredatoryJournal {
+  id            String   @id @default(cuid())
+  title         String
+  issn          String?
+  publisher     String?
+  website       String?
+  source        String   // "bealls", "stop-predatory-journals"
+  country       String?
+  notes         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  
+  @@index([title])
+  @@index([issn])
+  @@index([source])
+  @@unique([title, source])
+}
+
+// Hijacked Journals (legitimate journals with stolen names)
+model HijackedJournal {
+  id                String   @id @default(cuid())
+  legitimateTitle   String
+  legitimateIssn    String?
+  legitimateWebsite String?
+  fakeWebsite       String
+  notes             String?
+  reportedDate      DateTime?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+  
+  @@index([legitimateTitle])
+  @@index([fakeWebsite])
+}
+
+// Scopus Discontinued Journals
+model ScopusDiscontinued {
+  id                  String   @id @default(cuid())
+  title               String
+  issn                String?
+  publisher           String?
+  discontinuedDate    DateTime?
+  discontinuedReason  String?  // "Radar", "Publication Concerns", "Continuous Curation", etc.
+  notes               String?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+  
+  @@index([title])
+  @@index([issn])
+  @@index([discontinuedReason])
+}
+
+// Fake Metrics Services (from Stop Predatory Journals)
+model FakeMetric {
+  id          String   @id @default(cuid())
+  name        String
+  website     String?
+  description String?
+  notes       String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  @@index([name])
+}
