@@ -13,5 +13,10 @@ export async function GET(request: NextRequest) {
   }
 
   // URL to redirect to after sign in process completes
-  return NextResponse.redirect(requestUrl.origin);
+  // Use production URL in production, otherwise use request origin
+  const redirectUrl = process.env.NODE_ENV === 'production' 
+    ? 'https://papercredcheck.onrender.com'
+    : requestUrl.origin;
+  
+  return NextResponse.redirect(redirectUrl);
 }
