@@ -93,6 +93,8 @@ export default function Home() {
       if (data.success) {
         setHasAcceptedLegal(true);
         setShowLegalModal(false);
+      } else {
+        alert('Failed to record acceptance: ' + (data.error || 'Unknown error'));
       }
     } catch (error) {
       console.error('Error recording legal acceptance:', error);
