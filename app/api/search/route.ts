@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { searchPapersByTitle, searchPapersByDOI } from '@/lib/openalex';
+import { searchPapersByTitle, searchPapersByDOI, PaperSearchResult } from '@/lib/openalex';
 
 /**
  * Search for papers by title or DOI using OpenAlex
@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    let results = [];
+    let results: PaperSearchResult[] = [];
     let searchType = '';
 
     // Search by DOI if provided
