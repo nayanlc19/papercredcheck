@@ -40,3 +40,6 @@ next-env.d.ts
 /data/*.json
 /data/*.csv
 /data/*.xlsx
+FIX_SUMMARY_*.md
+DEPLOYMENT_CONTEXT_*.md
+check-deploy.js

@@ -1,25 +1,17 @@
-import { createClient as createSupabaseClient } from '@supabase/supabase-js';
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import type { Database } from '@/types/supabase';
 
-// Only initialize if environment variables are present (not during build)
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+// Singleton instance to prevent multiple clients
+let clientInstance: ReturnType<typeof createClientComponentClient<Database>> | null = null;
 
 export function createClient() {
-  // During build time, these may not be available - that's OK
-  if (!supabaseUrl || !supabaseAnonKey) {
-    // In production, this should never happen on the client side
-    if (typeof window !== 'undefined') {
-      console.error('Supabase env vars missing:', { 
-        hasUrl: !!supabaseUrl, 
-        hasKey: !!supabaseAnonKey 
-      });
-    }
-    // Return a stub during build that will be replaced at runtime
-    return createSupabaseClient(
-      supabaseUrl || 'https://placeholder.supabase.co',
-      supabaseAnonKey || 'placeholder-key'
-    );
+  // Return existing instance if available
+  if (clientInstance) {
+    return clientInstance;
   }
 
-  return createSupabaseClient(supabaseUrl, supabaseAnonKey);
+  // Create new instance using auth-helpers (handles cookies properly)
+  clientInstance = createClientComponentClient<Database>();
+  
+  return clientInstance;
 }
