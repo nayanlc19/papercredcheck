@@ -6,9 +6,13 @@
 
 import Groq from 'groq-sdk';
 
-const groq = new Groq({
-  apiKey: process.env.GROQ_API_KEY!
-});
+// Only initialize if environment variable is present (not during build)
+const apiKey = process.env.GROQ_API_KEY || '';
+
+// Create client only if we have valid API key
+const groq = apiKey
+  ? new Groq({ apiKey })
+  : null as any; // Fallback for build time
 
 export interface MatchResult {
   isMatch: boolean;
